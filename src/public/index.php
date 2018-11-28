@@ -3,8 +3,12 @@
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 use KanbanBoard\Authentication;
-$dotenv = new Dotenv\Dotenv(__DIR__ . '/../..');
-$dotenv->load();
+
+$envFile = __DIR__ . '/../../.env';
+if (file_exists($envFile)) {
+    $dotenv = new Dotenv\Dotenv(__DIR__ . '/../..');
+    $dotenv->load();
+}
 
 $repositories = explode('|', Utilities::env('GH_REPOSITORIES'));
 $authentication = new Authentication();
