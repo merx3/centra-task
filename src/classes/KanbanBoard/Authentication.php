@@ -1,6 +1,7 @@
 <?php
 namespace KanbanBoard;
-use KanbanBoard\Utilities;
+
+use Utilities;
 
 class Authentication {
 
@@ -22,27 +23,23 @@ class Authentication {
 	{
 		session_start();
 		$token = NULL;
-		if(array_key_exists('gh-token', $_SESSION)) {
+		if (array_key_exists('gh-token', $_SESSION)) {
 			$token = $_SESSION['gh-token'];
-		}
-		else if(Utilities::hasValue($_GET, 'code')
-			&& Utilities::hasValue($_GET, 'state')
-			&& $_SESSION['redirected'])
-		{
-			$_SESSION['redirected'] = false;
-			$token = $this->_returnsFromGithub($_GET['code']);
-		}
-		else
-		{
+		} elseif (Utilities::hasValue($_GET, 'code')
+			    && Utilities::hasValue($_GET, 'state')
+			    && $_SESSION['redirected']) {
+		    $_SESSION['redirected'] = false;
+            $token = $this->returnsFromGithub($_GET['code']);
+		} else {
 			$_SESSION['redirected'] = true;
-			$this->_redirectToGithub();
+			$this->redirectToGithub();
 		}
 		$this->logout();
 		$_SESSION['gh-token'] = $token;
 		return $token;
 	}
 
-	private function _redirectToGithub()
+	private function redirectToGithub()
 	{
 		$url = 'Location: https://github.com/login/oauth/authorize';
 		$url .= '?client_id=' . $this->client_id;
@@ -52,25 +49,27 @@ class Authentication {
 		exit();
 	}
 
-	private function _returnsFromGithub($code)
+	private function returnsFromGithub($code)
 	{
 		$url = 'https://github.com/login/oauth/access_token';
-		$data = array(
+		$data = [
 			'code' => $code,
 			'state' => 'LKHYgbn776tgubkjhk',
 			'client_id' => $this->client_id,
-			'client_secret' => $this->client_secret);
-		$options = array(
-			'http' => array(
+			'client_secret' => $this->client_secret
+        ];
+		$options = [
+			'http' => [
 				'method' => 'POST',
-				'header' => "Content-type: application/x-www-form-urlencoded\r\n",
+				'header' => "Content-type: application/x-www-form-urlencoded",
 				'content' => http_build_query($data),
-			),
-		);
+			]
+		];
 		$context = stream_context_create($options);
 		$result = file_get_contents($url, false, $context);
-		if ($result === FALSE)
-			die('Error');
+		if (!$result) {
+            die('Error: No token returned from ' . $url);
+        }
 		$result = explode('=', explode('&', $result)[0]);
 		array_shift($result);
 		return array_shift($result);

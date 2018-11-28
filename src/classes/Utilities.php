@@ -1,5 +1,4 @@
 <?php
-namespace KanbanBoard;
 
 class Utilities
 {
@@ -8,12 +7,10 @@ class Utilities
 
 	public static function env($name, $default = NULL) {
 		$value = getenv($name);
-		if($default !== NULL) {
-			if(!empty($value))
-				return $value;
-			return $default;
-		}
-		return (empty($value) && $default === NULL) ? die('Environment variable ' . $name . ' not found or has no value') : $value;
+		if (empty($value) && $default === NULL) {
+            die('Environment variable ' . $name . ' not found or has no value');
+        }
+        return empty($value) ? $default : $value;
 	}
 
 	public static function hasValue($array, $key) {
