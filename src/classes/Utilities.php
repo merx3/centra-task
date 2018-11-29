@@ -16,10 +16,4 @@ class Utilities
 	public static function hasValue($array, $key) {
 		return is_array($array) && array_key_exists($key, $array) && !empty($array[$key]);
 	}
-
-	public static function dump($data) {
-		echo '<pre>';
-		var_dump($data);
-		echo '</pre>';
-	}
 }

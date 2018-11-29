@@ -4,13 +4,22 @@ namespace KanbanBoard;
 use Michelf\Markdown;
 use Utilities;
 
-class Application {
-
+class Application
+{
+    /**
+     * @var \GithubClient
+     */
     private $github;
+    /**
+     * @var array
+     */
     private $repositories;
+    /**
+     * @var array
+     */
     private $pausedLabels;
 
-    public function __construct($github, $repositories, $pausedLabels = array())
+    public function __construct($github, $repositories, $pausedLabels = [])
     {
 		$this->github = $github;
 		$this->repositories = $repositories;
@@ -29,20 +38,9 @@ class Application {
 		ksort($rawMilestones);
         $milestones = [];
 		foreach ($rawMilestones as $name => $data) {
-			$issues = $this->issues($data['repository'], $data['number']);
 			$percent = $this->toPercentage($data['closed_issues'], $data['open_issues']);
-			$queued = isset($issues['queued']) ? $issues['queued'] : '';
-			$active = isset($issues['active']) ? $issues['active'] : '';
-            $completed = isset($issues['completed']) ? $issues['completed'] : '';
 			if ($percent) {
-				$milestones[] = array(
-					'milestone' => $name,
-					'url' => $data['html_url'],
-					'progress' => $percent,
-					'queued' => $queued,
-					'active' => $active,
-					'completed' => $completed
-				);
+                $milestones[] = $this->formatMilestone($name, $data, $percent);
 			}
 		}
 		return $milestones;
@@ -54,21 +52,8 @@ class Application {
 		$issuesRaw = $this->github->issues($repository, $milestone_id);
 		foreach ($issuesRaw as $issue) {
 			if (!isset($issue['pull_request'])) {
-                $assignee = Utilities::hasValue($issue, 'assignee') ? $issue['assignee']['avatar_url'].'?s=16' : NULL;
                 $issueState = $this->getState($issue);
-                $complete = substr_count(strtolower($issue['body']), '[x]');
-                $remaining = substr_count(strtolower($issue['body']), '[ ]');
-                $issues[$issueState][] = [
-                    'id' => $issue['id'],
-                    'number' => $issue['number'],
-                    'title' => $issue['title'],
-                    'body' => Markdown::defaultTransform($issue['body']),
-                    'url' => $issue['html_url'],
-                    'assignee' => $assignee,
-                    'paused' => $this->pausedLabel($issue),
-                    'progress' => $this->toPercentage($complete, $remaining),
-                    'closed' => $issue['closed_at']
-                ];
+                $issues[$issueState][] = $this->formatIssue($issue);
             }
 		}
 		if ($issues['active']) {
@@ -117,4 +102,38 @@ class Application {
 		}
 		return [];
 	}
+
+    private function formatMilestone($name, $data, $percent)
+    {
+        $issues = $this->issues($data['repository'], $data['number']);
+        $queued = isset($issues['queued']) ? $issues['queued'] : '';
+        $active = isset($issues['active']) ? $issues['active'] : '';
+        $completed = isset($issues['completed']) ? $issues['completed'] : '';
+        return [
+            'milestone' => $name,
+            'url' => $data['html_url'],
+            'progress' => $percent,
+            'queued' => $queued,
+            'active' => $active,
+            'completed' => $completed
+        ];
+    }
+
+    private function formatIssue($issue)
+    {
+        $assignee = Utilities::hasValue($issue, 'assignee') ? $issue['assignee']['avatar_url'].'?s=16' : NULL;
+        $complete = substr_count(strtolower($issue['body']), '[x]');
+        $remaining = substr_count(strtolower($issue['body']), '[ ]');
+        return [
+            'id' => $issue['id'],
+            'number' => $issue['number'],
+            'title' => $issue['title'],
+            'body' => Markdown::defaultTransform($issue['body']),
+            'url' => $issue['html_url'],
+            'assignee' => $assignee,
+            'paused' => $this->pausedLabel($issue),
+            'progress' => $this->toPercentage($complete, $remaining),
+            'closed' => $issue['closed_at']
+        ];
+    }
 }

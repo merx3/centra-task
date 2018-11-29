@@ -3,25 +3,24 @@
 class GithubClient
 {
     private $client;
-    private $milestone_api;
+    private $milestoneApi;
     private $account;
 
-    public function __construct($token, $account)
+    public function __construct($account, $client, $milestonesApi)
     {
         $this->account = $account;
-        $this->client= new \Github\Client(new \Github\HttpClient\CachedHttpClient(array('cache_dir' => '/tmp/github-api-cache')));
-        $this->client->authenticate($token, \Github\Client::AUTH_HTTP_TOKEN);
-        $this->milestone_api = $this->client->api('issues')->milestones();
+        $this->client= $client;
+        $this->milestoneApi = $milestonesApi;
     }
 
     public function milestones($repository)
     {
-        return $this->milestone_api->all($this->account, $repository);
+        return $this->milestoneApi->all($this->account, $repository);
     }
 
     public function issues($repository, $milestone_id)
     {
-        $issue_parameters = array('milestone' => $milestone_id, 'state' => 'all');
+        $issue_parameters = ['milestone' => $milestone_id, 'state' => 'all'];
         return $this->client->api('issue')->all($this->account, $repository, $issue_parameters);
     }
 }
