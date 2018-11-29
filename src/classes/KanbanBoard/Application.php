@@ -31,14 +31,17 @@ class Application {
 		foreach ($rawMilestones as $name => $data) {
 			$issues = $this->issues($data['repository'], $data['number']);
 			$percent = $this->toPercentage($data['closed_issues'], $data['open_issues']);
+			$queued = isset($issues['queued']) ? $issues['queued'] : '';
+			$active = isset($issues['active']) ? $issues['active'] : '';
+            $completed = isset($issues['completed']) ? $issues['completed'] : '';
 			if ($percent) {
 				$milestones[] = array(
 					'milestone' => $name,
 					'url' => $data['html_url'],
 					'progress' => $percent,
-					'queued' => $issues['queued'],
-					'active' => $issues['active'],
-					'completed' => $issues['completed']
+					'queued' => $queued,
+					'active' => $active,
+					'completed' => $completed
 				);
 			}
 		}
@@ -68,10 +71,12 @@ class Application {
                 ];
             }
 		}
-		usort($issues['active'], function ($a, $b) {
-		    $pausedDiff = count($a['paused']) - count($b['paused']);
-		    return $pausedDiff ?: strcmp($a['title'], $b['title']);
-        });
+		if ($issues['active']) {
+            usort($issues['active'], function ($a, $b) {
+                $pausedDiff = count($a['paused']) - count($b['paused']);
+                return $pausedDiff ?: strcmp($a['title'], $b['title']);
+            });
+        }
 		return $issues;
 	}
 

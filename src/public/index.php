@@ -17,6 +17,6 @@ $github = new GithubClient($token, Utilities::env('GH_ACCOUNT'));
 $board = new \KanbanBoard\Application($github, $repositories, ['waiting-for-feedback']);
 $data = $board->board();
 $m = new Mustache_Engine([
-	'loader' => new Mustache_Loader_FilesystemLoader('../views'),
+	'loader' => new Mustache_Loader_FilesystemLoader(__DIR__ . '/../views'),
 ]);
 echo $m->render('index', array('milestones' => $data));
