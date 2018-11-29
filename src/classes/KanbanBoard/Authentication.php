@@ -77,8 +77,7 @@ class Authentication
 		if (!$result) {
             die('Error: No token returned from ' . $url);
         }
-		$result = explode('=', explode('&', $result)[0]);
-		array_shift($result);
-		return array_shift($result);
+        parse_str($result, $args);
+		return $args['access_token'];
 	}
 }
